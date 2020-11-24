@@ -1,0 +1,49 @@
+
+SELECT * FROM Demographics
+
+SELECT contactid AS ID,
+	gendercode AS GenderCode,
+	tri_age AS Age,
+	parentcustomeridname AS ParentIDName,
+	tri_imaginecareenrollmentstatus AS EnrollStatusCode,
+	address1_stateorprovince AS AddressState,
+	tri_imaginecareenrollmentemailsentdate AS EmailSentDate,
+	tri_enrollmentcompletedate AS CompleteDate,
+	gender AS GenderInt,
+	DATEDIFF(DD, TRY_CONVERT(datetime, tri_imaginecareenrollmentemailsentdate, 101), TRY_CONVERT(datetime, tri_enrollmentcompletedate, 101)) AS EnrollmentCompletionDays
+INTO atong.Demographics FROM Demographics  
+
+ALTER TABLE atong.Demographics
+ADD EnrollmentStatus AS
+CASE 
+	WHEN EnrollStatusCode = 167410011 then 'Completee'
+	WHEN EnrollStatusCode = 167410001 then 'Email Sent'
+	WHEN EnrollStatusCode = 167410004 then 'Non Responder'
+	WHEN EnrollStatusCode = 167410005 then 'Facilliated Enrollment'
+	WHEN EnrollStatusCode = 167410002 then 'Incomplete Enrollments'
+	WHEN EnrollStatusCode = 167410003 then 'Opted Out'
+	WHEN EnrollStatusCode = 167410000 then 'Unprocessed'
+	WHEN EnrollStatusCode = 167410006 then 'Second email'
+END
+
+ALTER TABLE atong.Demographics
+ADD Gender AS
+CASE 
+	WHEN Genderint = 2 then 'Female'
+	WHEN Genderint = 1 then 'Male'
+	WHEN Genderint = 167410000 then 'Other'
+	WHEN EnrollStatusCode IS NULL then 'Unknown '
+END
+
+ALTER TABLE atong.Demographics
+ADD AgeGroup AS
+CASE 
+	WHEN Age < 26 then '0-25'
+	WHEN Age >= 26 AND Age < 51 then '26-50'
+	WHEN Age >= 51 AND Age < 76  then '51-75'
+	WHEN Age >=76 then '76+'
+	ELSE 'Unknown'
+END
+
+SELECT TOP 10 * FROM atong.Demographics
+ORDER BY ID
