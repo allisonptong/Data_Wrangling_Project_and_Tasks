@@ -1,0 +1,43 @@
+
+myconn=odbcConnect("dartmouth_qbs181","atong","atong@qbs181")
+data=sqlQuery(myconn,"select * from atong.finalq1")
+
+data$ObservedTimeDate=as.Date(data$ObservedTime, origin = "1899-12-30")
+
+AvgScore = data %>%
+  group_by(ID) %>%
+  arrange(ObservedTimeDate, .by_group = TRUE) %>%
+  filter(ObservedTimeDate<=min(ObservedTimeDate+84)) %>%
+  summarize(MonitoredDuration = max(ObservedTimeDate)-min(ObservedTimeDate), 
+            AverageScore = mean(BPControlled, na.rm = TRUE)/n()) 
+
+print.data.frame(AvgScore[sample(nrow(AvgScore), 10), ])
+
+Change = data %>%
+  group_by(ID) %>%
+  arrange(ObservedTimeDate, .by_group = TRUE) %>%
+  filter(ObservedTimeDate<=min(ObservedTimeDate+84)) %>%
+  slice(c(1,n())) %>%
+  summarize(ScoreDifference = BPControlled[2]-BPControlled[1])
+  
+print.data.frame(Change[sample(nrow(Change), 10), ])
+
+sum(Change$ScoreDifference==1)
+sum(Change$ScoreDifference==0)
+sum(Change$ScoreDifference==-1)
+
+Demographics = read.csv("Demographics.csv")
+Conditions = read.csv("Conditions.csv")
+Text = read.csv("Text.csv")
+library(dplyr)
+library(tidyverse)
+
+df = Demographics%>%inner_join(Conditions, by=c("contactid" = "tri_patientid"))%>%
+  inner_join(Text, by=c("contactid" = "tri_contactId"))%>%
+  group_by(contactid) %>%
+  arrange(contactid,TextSentDate) %>%
+  filter(row_number()==n())
+
+print.data.frame(df[sample(nrow(df), 10), ])
+
+
