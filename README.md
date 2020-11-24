@@ -11,23 +11,40 @@ There are five subdirectories - 3 projects that I completed throughout the term 
 The first project asked us to:
 
 1.	 Rename all the columns for eg.,
-  a)	TriAge to Age
-  b)	GenderCode to Gender
-  c)	ContactID to ID
-  d)	Address1Stateorprovince to State
+
+a)	TriAge to Age
+
+b)	GenderCode to Gender
+
+c)	ContactID to ID
+
+d)	Address1Stateorprovince to State
+
 e)	TriImagineCareenrollmentemailsentdate to EmailSentdate
+
 f)	Trienrollmentcompletedate to Completedate
+
 g)	Calculate the time (in days) to complete enrollment and create a new column to have this data
 
+
 2.	Create a new column “Enrollment Status”
+
 a)	Insert Status=Complete :code is 167410011
+
 b)	Insert Status=Email sent :code is 167410001
+
 c)	Insert Status=Non responder: Code is 167410004
+
 d)	Insert Status=Facilitated Enrollment: Code  is 167410005
+
 e)	Insert Status= Incomplete Enrollments: Code  is 167410002
+
 f)	Insert Status= Opted Out: Code  is 167410003
+
 g)	Insert Status= Unprocessed: Code  is 167410000
+
 h)	Insert Status= Second email sent : Code  is 167410006
+
 
 3.	Create a new Column “Gender”
 a)	Insert Gender=female if code=2
