@@ -1,0 +1,82 @@
+
+
+SELECT * FROM atong.IC_BP_v2;
+
+EXEC sp_rename 
+    @objname = 'atong.IC_BP_v2.BPAlerts', 
+    @newname = 'BPStatus', 
+    @objtype = 'COLUMN';
+
+SELECT * FROM atong.IC_BP_v2;
+
+ALTER TABLE atong.IC_BP_v2 
+ADD BPControlled INT;
+
+UPDATE atong.IC_BP_v2
+SET BPControlled = 1
+WHERE BPStatus = 'Hypo1'
+OR BPStatus = 'Normal';
+
+UPDATE atong.IC_BP_v2
+SET BPControlled = 0
+WHERE BPStatus = 'HTN1'
+OR BPStatus = 'HTN2'
+OR BPStatus = 'HTN3'
+OR BPStatus = 'Hypo2';
+
+SELECT * FROM atong.IC_BP_v2;
+
+SELECT TOP 10 *
+  FROM atong.IC_BP_v2
+  ORDER BY NEWID();
+
+
+SELECT * FROM atong.IC_BP_v2
+WHERE BPControlled IS NULL
+
+
+SELECT * FROM Demographics
+
+SELECT ID, SystolicValue, Diastolicvalue, BPStatus, ObservedTime, BPControlled, tri_enrollmentcompletedate
+INTO atong.finalq1
+FROM atong.IC_BP_v2
+LEFT JOIN Demographics
+ON atong.IC_BP_v2.ID = Demographics.contactid
+
+
+SELECT TOP 10 *
+  FROM atong.finalq1
+  ORDER BY NEWID();
+
+
+
+SELECT *
+INTO atong.finalq2
+FROM Demographics
+INNER JOIN Conditions ON Demographics.contactid = Conditions.tri_patientid
+INNER JOIN Text ON Text.tri_contactId = Conditions.tri_patientid;
+
+SELECT * FROM atong.finalq2;
+
+ALTER TABLE atong.finalq2
+DROP COLUMN tri_patientid;
+
+ALTER TABLE atong.finalq2
+DROP COLUMN tri_contactid;
+
+SELECT * FROM atong.finalq2;
+
+SELECT  *
+INTO atong.finalq2result
+FROM    (
+        SELECT  *, ROW_NUMBER() OVER (PARTITION BY contactid ORDER BY TextSentDate DESC) rn
+        FROM    atong.finalq2
+        ) x
+WHERE   x.rn = 1;
+
+
+SELECT TOP 10 *
+  FROM atong.finalq2result
+  ORDER BY NEWID();
+
+
