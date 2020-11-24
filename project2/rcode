@@ -1,0 +1,129 @@
+
+library("RODBC")
+library("stringr")
+myconn=odbcConnect("dartmouth_qbs181","atong","atong@qbs181")
+Phonecall=sqlQuery(myconn,"select * from Phonecall")
+Phonecall_Encounter=sqlQuery(myconn,"select * from PhoneCall_Encounter")
+Phonecall.merged=merge(Phonecall, Phonecall_Encounter, 
+                       by.x="tri_CustomerIDEntityReference", 
+                       by.y = "CustomerId")
+n=nrow(Phonecall.merged)
+enrollment_group=rep(0,n)
+for (i in 1:n){
+  if (Phonecall.merged$EncounterCode[i]==125060000){
+    enrollment_group[i]="Clinical Alert"
+  } else if (Phonecall.merged$EncounterCode[i]==125060001) {
+    enrollment_group[i]="Health Coaching"
+  } else if  (Phonecall.merged$EncounterCode[i]==125060002) {
+    enrollment_group[i]="Technical Question"
+  } else if  (Phonecall.merged$EncounterCode[i]==125060003) {
+    enrollment_group[i]="Administrative"
+  } else if  (Phonecall.merged$EncounterCode[i]==125060004) {
+    enrollment_group[i]="Other"
+  } else if  (Phonecall.merged$EncounterCode[i]==125060005) {
+    enrollment_group[i]="Lack of engagement "
+  } else {
+    enrollment_group[i]="Unkown"
+  }
+}
+Phonecall.merged$Enrollment_Group=enrollment_group
+Phonecall.merged[sample(nrow(Phonecall.merged),10),]
+
+
+clinical=sum(str_detect(Phonecall.merged$Enrollment_Group, "Clinical"))
+health_coaching=sum(str_detect(Phonecall.merged$Enrollment_Group, "Health Coaching"))
+tech_question=sum(str_detect(Phonecall.merged$Enrollment_Group, "Technical Question"))
+admin=sum(str_detect(Phonecall.merged$Enrollment_Group, "Administrative"))
+other=sum(str_detect(Phonecall.merged$Enrollment_Group, "Other"))
+lack_of_engage=sum(str_detect(Phonecall.merged$Enrollment_Group, "Lack of engagement"))
+
+cbind(c("Clinical","Health Coaching","Technical Question", "Administrative", "Other", "Lack of engagement"),c(clinical,health_coaching,tech_question,admin,other,lack_of_engage))
+
+Call_duration=sqlQuery(myconn,"select * from CallDuration")
+New_merged=merge(Phonecall.merged, Call_duration, 
+                       by.x="tri_CustomerIDEntityReference", 
+                       by.y = "tri_CustomerIDEntityReference")
+
+New_merged$CallType.y=NULL
+New_merged$CallDuration.y=NULL
+New_merged$CallOutcome.y=NULL
+
+New_merged[sample(nrow(New_merged),10),]
+
+
+call_type_one=sum(str_detect(New_merged$CallType.x, "1"))
+call_type_two=sum(str_detect(New_merged$CallType.x, "2"))
+call_outcome_one=sum(str_detect(New_merged$CallOutcome.x, "1"))
+call_outcome_two=sum(str_detect(New_merged$CallOutcome.x, "2"))
+call_outcome_three=sum(str_detect(New_merged$CallOutcome.x, "3"))
+
+cbind(c("1 - No Response","2 - Left Voicemail","3 - Sucessful"),c(call_outcome_one, call_outcome_two, call_outcome_three))
+
+
+cbind(c("1 - Inbound","2 - Outbound"),c(call_type_one,call_type_two))
+
+total_call_duration=rep(0,6)
+for (i in 1:nrow(New_merged)){
+  if (New_merged$EncounterCode[i]==125060000){
+    total_call_duration[1]=total_call_duration[1]+New_merged$CallDuration.x[i]
+  } else if (New_merged$EncounterCode[i]==125060001) {
+    total_call_duration[2]=total_call_duration[2]+New_merged$CallDuration.x[i]
+  } else if  (New_merged$EncounterCode[i]==125060002) {
+    total_call_duration[3]=total_call_duration[3]+New_merged$CallDuration.x[i]
+  } else if  (New_merged$EncounterCode[i]==125060003) {
+    total_call_duration[4]=total_call_duration[4]+New_merged$CallDuration.x[i]
+  } else if  (New_merged$EncounterCode[i]==125060004) {
+    total_call_duration[5]=total_call_duration[5]+New_merged$CallDuration.x[i]
+  } else if  (New_merged$EncounterCode[i]==125060005) {
+    total_call_duration[6]=total_call_duration[6]+New_merged$CallDuration.x[i]
+  } 
+}
+
+clinical=sum(str_detect(New_merged$Enrollment_Group, "Clinical"))
+health_coaching=sum(str_detect(New_merged$Enrollment_Group, "Health Coaching"))
+tech_question=sum(str_detect(New_merged$Enrollment_Group, "Technical Question"))
+admin=sum(str_detect(New_merged$Enrollment_Group, "Administrative"))
+other=sum(str_detect(New_merged$Enrollment_Group, "Other"))
+lack_of_engage=sum(str_detect(New_merged$Enrollment_Group, "Lack of engagement"))
+
+
+average_call_duration=total_call_duration/c(clinical,health_coaching,tech_question,admin,other,lack_of_engage)
+
+cbind(c("Clinical","Health Coaching","Technical Question", "Administrative", "Other", "Lack of engagement"), average_call_duration, total_call_duration)
+
+Demographics=sqlQuery(myconn,"select * from Demographics") Conditions=sqlQuery(myconn,"select * from Conditions") TextMessages=sqlQuery(myconn,"select * from Text")
+Two_merged=merge(Demographics, Conditions, by.x="contactid", by.y = "tri_patientid") Combined=merge(Two_merged, TextMessages, by.x="contactid", by.y = "tri_contactId")
+total_texts=rep(0,3)
+for (i in 1:nrow(Combined)){
+  if (Combined$SenderName[i]=="System"){ 
+    total_texts[1]=total_texts[1]+1
+  } 
+  else if (Combined$SenderName[i]=="Customer") { 
+    total_texts[2]=total_texts[2]+1
+  } 
+  else if (Combined$SenderName[i]=="Clinician") { 
+    total_texts[3]=total_texts[3]+1
+  } 
+}
+
+total_weeks=as.numeric(max(Combined$TextSentDate)-min(Combined$TextSentDate), units="weeks average_texts_per_week=total_texts/total_weeks
+print(cbind(c("System", "Customer", "Clinician"), total_texts, average_texts_per_week))
+
+condition=unique(Combined$tri_name)
+total_texts_new=rep(0,5)
+for (i in 1:nrow(Combined)){
+  if (Combined$tri_name[i]=="Activity Monitoring"){ 
+    total_texts_new[1]=total_texts_new[1]+1
+  } else if (Combined$tri_name[i]=="Hypertension") { 
+    total_texts_new[2]=total_texts_new[2]+1
+  } else if (Combined$tri_name[i]=="Diabetes") { 
+    total_texts_new[3]=total_texts_new[3]+1
+  } else if (Combined$tri_name[i]=="COPD") { 
+    total_texts_new[4]=total_texts_new[4]+1
+  } else if (Combined$tri_name[i]=="Congestive Heart Failure") { 
+    total_texts_new[5]=total_texts_new[5]+1
+  } 
+}
+
+average_texts_per_week_new=total_texts_new/total_weeks 
+print(cbind(condition, total_texts_new, average_texts_per_week_new))
