@@ -1,0 +1,42 @@
+SELECT * FROM atong.midterm
+
+SELECT diq010, COUNT('diq010') FROM atong.midterm
+GROUP BY diq010
+
+-- Checking if doctor told patient they had diabetes against website numbers
+SELECT SUM(CASE WHEN diq010 = 1 THEN 1 ELSE 0 END) AS [Yes],
+       SUM(CASE WHEN diq010 = 2 THEN 1 ELSE 0 END) AS [No],
+       SUM(CASE WHEN diq010 = 3 THEN 1 ELSE 0 END) AS [Borderline],
+	   SUM(CASE WHEN diq010 = 7 THEN 1 ELSE 0 END) AS [Refused],
+	   SUM(CASE WHEN diq010 = 9 THEN 1 ELSE 0 END) AS [Dont know],
+	   SUM(CASE WHEN diq010 is null THEN 1 ELSE 0 END) AS [Missing]
+FROM atong.midterm
+
+
+
+-- Checking age when first told you had diabetes against website numbers
+SELECT SUM(CASE WHEN did040 between 2 and 78 THEN 1 ELSE 0 END) AS [Range of Values],
+       SUM(CASE WHEN did040 between 80 and 80 THEN 1 ELSE 0 END) AS [80 years or older],
+       SUM(CASE WHEN did040 between 666 and 666 THEN 1 ELSE 0 END) AS [Less than 1 year],
+	   SUM(CASE WHEN did040 between 777 and 777 THEN 1 ELSE 0 END) AS [Refused],
+	   SUM(CASE WHEN did040 between 999 and 999 THEN 1 ELSE 0 END) AS [Dont know],
+	   SUM(CASE WHEN did040 is null THEN 1 ELSE 0 END) AS [Missing]
+FROM atong.midterm
+
+
+-- Checking if ever told you had prediabetes against website numbers
+SELECT SUM(CASE WHEN diq160 = 1 THEN 1 ELSE 0 END) AS [Yes],
+       SUM(CASE WHEN diq160 = 2 THEN 1 ELSE 0 END) AS [No],
+       SUM(CASE WHEN diq160 = 7 THEN 1 ELSE 0 END) AS [Refused],
+	   SUM(CASE WHEN diq160 = 9 THEN 1 ELSE 0 END) AS [Don't know],
+	   SUM(CASE WHEN diq160 is null THEN 1 ELSE 0 END) AS [Missing]
+FROM atong.midterm
+
+
+
+-- Checking if patient's SBP is below what their physician suggests
+SELECT SUM(CASE WHEN SBP_low_enough = 1 THEN 1 ELSE 0 END) AS [Yes],
+       SUM(CASE WHEN SBP_low_enough = 0 THEN 1 ELSE 0 END) AS [No],
+	   SUM(CASE WHEN SBP_low_enough is null THEN 1 ELSE 0 END) AS [Missing]
+FROM atong.midterm
+
