@@ -1,0 +1,157 @@
+
+library(Hmisc)
+mydata <- sasxport.get("DIQ_I.XPT")
+
+sapply(mydata, class)
+ncol(mydata)
+
+which(is.na(mydata$seqn))
+
+record=rep(0, nrow(mydata))
+for (i in 1:nrow(mydata)){ 
+  if ((mydata$diq010[i]==1) & (is.na(mydata$did040[i]))){
+    record[i]=i
+  }
+}  
+record=record[ record != 0 ] # these are the rows where a patient has a positive
+                             # diagnosis but no recorded age of diagnosis
+
+med=median(mydata$did040, na.rm=TRUE) # median age for when all patients were
+                                      # diagnosed with diabetes (should ignore
+                                      # 666, 777, etc. since it is median)
+
+# for those with a positive diagnosis but no recorded age of diagnosis, assign them the median age among those diagnosed
+
+for (i in 1:nrow(mydata)){ 
+  if ((mydata$diq010[i]==1) & (is.na(mydata$did040[i]))){
+   mydata$did040[i]=med
+  }
+}  
+
+print(mydata[record,c("seqn", "diq010", "did040")]) # check to make sure it works
+
+# DID260 and DIQ260U ask for how often a patient checks their blood sugar and the unit of measurement. I want to standardize this so everyone's answer is in years in a new column yearly_checks
+
+for (i in 1:nrow(mydata)){ 
+  if (mydata$diq260u[i]==1 & (!is.na(mydata$diq260u[i]))){
+    mydata$yearly_checks[i]=mydata$did260[i]*365
+    }
+  else if (mydata$diq260u[i]==2 & (!is.na(mydata$diq260u[i]))){
+    mydata$yearly_checks[i]=mydata$did260[i]*52
+    }
+  else if (mydata$diq260u[i]==3 & (!is.na(mydata$diq260u[i]))){
+    mydata$yearly_checks[i]=mydata$did260[i]*12
+    }
+  else if (mydata$diq260u[i]==4 & (!is.na(mydata$diq260u[i]))){
+    mydata$yearly_checks[i]=mydata$did260[i]
+    }
+  else if (mydata$did260[i]==0 & (!is.na(mydata$diq260u[i]))){
+    mydata$yearly_checks[i]=0
+    }
+  else{
+    mydata$yearly_checks[i]=NA
+    }
+}
+
+mydata[sample(which(!is.na(mydata$yearly_checks)), 10), 
+       c("yearly_checks", "did260", "diq260u")]
+
+
+# Add a binary column for whether or not the patients A1C (DIQ280) was lower than what their doctor recommends (DIQ291)
+
+for (i in 1:nrow(mydata)){ 
+  if(mydata$diq280[i]==777 || mydata$diq280[i]==999 || is.na(mydata$diq280[i])){
+    mydata$A1C_low_enough[i]=NA
+  }
+  else if (mydata$diq291[i]==1 & (!is.na(mydata$diq291[i]))){
+    if (mydata$diq280[i]<6){
+      mydata$A1C_low_enough[i]=1
+    } else{
+      mydata$A1C_low_enough[i]=0
+    }
+    }
+  else if (mydata$diq291[i]==2 & (!is.na(mydata$diq291[i]))){
+    if (mydata$diq280[i]<7){
+      mydata$A1C_low_enough[i]=1
+    } else{
+      mydata$A1C_low_enough[i]=0
+    }
+    }
+  else if (mydata$diq291[i]==3 & (!is.na(mydata$diq291[i]))){
+    if (mydata$diq280[i]<8){
+      mydata$A1C_low_enough[i]=1
+    } else{
+      mydata$A1C_low_enough[i]=0
+    }
+    }
+    else if (mydata$diq291[i]==4 & (!is.na(mydata$diq291[i]))){
+    if (mydata$diq280[i]<9){
+      mydata$A1C_low_enough[i]=1
+    } else{
+      mydata$A1C_low_enough[i]=0
+    }
+    }
+    else if (mydata$diq291[i]==5 & (!is.na(mydata$diq291[i]))){
+    if (mydata$diq280[i]<10){
+      mydata$A1C_low_enough[i]=1
+    } else{
+      mydata$A1C_low_enough[i]=0
+    }
+    }
+  else{
+    mydata$A1C_low_enough[i]=NA
+    }
+}
+
+mydata[sample(which(!is.na(mydata$A1C_low_enough)), 10), 
+       c("A1C_low_enough", "diq280", "diq291")]
+
+# Add a binary column for whether or not the patients SBP (DIQ300S) was lower than what their doctor recommends (DID310S)
+
+for (i in 1:nrow(mydata)){ 
+  if(mydata$diq300s[i]==7777 || mydata$diq300s[i]==9999 || is.na(mydata$diq300s[i])){
+    mydata$SBP_low_enough[i]=NA
+  }
+  else if (mydata$did310s[i]==6666 || mydata$did310s[i]==7777 || mydata$did310s[i]==9999 
+           || is.na(mydata$did310s[i])){
+    mydata$SBP_low_enough[i]=NA
+    }
+  else{
+    if (mydata$diq300s[i]<=mydata$did310s[i]){
+      mydata$SBP_low_enough[i]=1
+    } else{
+      mydata$SBP_low_enough[i]=0
+    }
+    }
+}
+
+mydata[sample(which(!is.na(mydata$SBP_low_enough)), 10), 
+       c("SBP_low_enough", "diq300s", "did310s")]
+
+
+# Add a binary column for whether or not the patients DBP (DIQ300D) was lower than what their doctor recommends (DID310D)
+
+for (i in 1:nrow(mydata)){ 
+  if(mydata$diq300d[i]==7777 || mydata$diq300d[i]==9999 || is.na(mydata$diq300d[i])){
+    mydata$DBP_low_enough[i]=NA
+  }
+  else if (mydata$did310d[i]==6666 || mydata$did310d[i]==7777 || mydata$did310d[i]==9999 
+           || is.na(mydata$did310d[i])){
+    mydata$DBP_low_enough[i]=NA
+    }
+  else{
+    if (mydata$diq300d[i]<=mydata$did310d[i]){
+      mydata$DBP_low_enough[i]=1
+    } else{
+      mydata$DBP_low_enough[i]=0
+    }
+    }
+}
+
+mydata[sample(which(!is.na(mydata$DBP_low_enough)), 10), 
+       c("DBP_low_enough", "diq300d", "did310d")]
+
+library("RODBC")
+myconn=odbcConnect("dartmouth_qbs181","atong","atong@qbs181")
+sqlSave(myconn, data.frame(mydata), tablename = "atong.midterm",
+        rownames=FALSE, append = TRUE)
