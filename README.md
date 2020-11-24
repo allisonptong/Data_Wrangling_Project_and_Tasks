@@ -11,10 +11,10 @@ There are five subdirectories - 3 projects that I completed throughout the term 
 The first project asked us to:
 
 1.	 Rename all the columns for eg.,
-a)	TriAge to Age
-b)	GenderCode to Gender
-c)	ContactID to ID
-d)	Address1Stateorprovince to State
+  a)	TriAge to Age
+  b)	GenderCode to Gender
+  c)	ContactID to ID
+  d)	Address1Stateorprovince to State
 e)	TriImagineCareenrollmentemailsentdate to EmailSentdate
 f)	Trienrollmentcompletedate to Completedate
 g)	Calculate the time (in days) to complete enrollment and create a new column to have this data
