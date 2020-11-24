@@ -1,0 +1,70 @@
+library(dplyr)
+library(tidyverse)
+library(magrittr)
+library(nycflights13)
+
+table2
+table4a
+table4b
+
+# table 2
+spread(table2,key=type,value=count)%>%mutate(rate=cases/population *10000)
+
+# table 4a and 4b combined
+arrange(table4a%>%gather('1999','2000',key="year",value="cases") %>%
+          mutate(table4b%>%gather('1999','2000',key="year",value="population")),country) %>%
+  mutate(rate=cases/population *10000)
+
+
+by_day <- group_by(nycflights13::flights,year,month,day)
+by_day_flight_time = summarize(by_day,flight_time=mean(air_time,na.rm=TRUE))
+by_day_flight_time$date <- as.Date(with(by_day_flight_time, 
+                                        paste(year, month, day,sep="-")), "%Y-%m-%d")
+
+ggplot(by_day_flight_time, aes(x=date, y=flight_time)) +
+  geom_line() + 
+  xlab("") + ylab("Average Air Time")
+
+by_day_flight_time3 = summarize(by_day,flight_time=median(air_time,na.rm=TRUE))
+by_day_flight_time3$date <- as.Date(with(by_day_flight_time3, 
+                                         paste(year, month, day,sep="-")), "%Y-%m-%d")
+
+ggplot(by_day_flight_time3, aes(x=date, y=flight_time)) +
+  geom_line() + 
+  xlab("") + ylab("Median Air Time")
+
+
+by_day_flight_time2 = summarize(by_day,flight_time=sd(air_time,na.rm=TRUE))
+by_day_flight_time2$date <- as.Date(with(by_day_flight_time2, 
+                                         paste(year, month, day,sep="-")), "%Y-%m-%d")
+
+ggplot(by_day_flight_time2, aes(x=date, y=flight_time)) +
+  geom_line() + 
+  xlab("") + ylab("Standard Deviation of Air Time")
+
+
+library(dplyr)
+library(stringr)
+library(data.table)
+changed = flights %>% 
+              select(sched_dep_time, dep_time) %>% 
+              mutate_all(~ str_pad(., width = 4, pad = 0) %>%
+                      str_replace(., '^(..)', '\\1:') %>% 
+                      as.ITime) %>%
+          mutate(diff = difftime(dep_time, sched_dep_time, unit = 'min'))
+
+nrow(changed)-sum(changed$diff==flights$dep_delay, na.rm = TRUE)
+
+flights=flights
+flights$early_departure=ifelse(flights$dep_delay<0, 1, 0)
+flights$early_arrival=ifelse(flights$arr_delay<0, 1, 0)
+length(which(flights$early_arrival==1))
+length(which(flights$early_arrival==1 & flights$early_departure==1))
+
+
+flights %>% 
+     filter(early_arrival==1) %>%
+     group_by(minute_bucket=cut(minute, breaks= seq(0, 60, by = 10)) ) %>% 
+     summarise(n= n()) %>%
+     arrange(as.numeric(minute_bucket)) %>%
+     with(plot(minute_bucket, n))
